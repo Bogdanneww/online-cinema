@@ -5,12 +5,20 @@ from sqlalchemy import select
 from models import Film
 from schemas import FilmCreate, FilmRead
 from database import get_db
+from crud import create_film, get_films
 
 router = APIRouter()
 
-@router.get("/movies/")
-async def read_movies():
-    return {"message": "List of movies"}
+@router.post("/movies/", response_model=FilmRead)
+async def add_film(film: FilmCreate, db: AsyncSession = Depends(get_db)):
+    new_film = await create_film(db, film)
+    return new_film
+
+@router.get("/movies/", response_model=list[FilmRead])
+async def list_films(db: AsyncSession = Depends(get_db)):
+    films = await get_films(db)
+    return films
+
 
 @router.get("/movies/{film_id}", response_model=FilmRead)
 async def get_film(film_id: int, db: AsyncSession = Depends(get_db)):
@@ -19,12 +27,3 @@ async def get_film(film_id: int, db: AsyncSession = Depends(get_db)):
     if not film:
         raise HTTPException(status_code=404, detail="Film not found")
     return film
-
-
-@router.post("/movies/", response_model=FilmRead)
-async def create_film(film: FilmCreate, db: AsyncSession = Depends(get_db)):
-    new_film = Film(**film.model_dump())
-    db.add(new_film)
-    await db.commit()
-    await db.refresh(new_film)
-    return new_film
