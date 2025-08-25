@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class FilmBase(BaseModel):
@@ -23,7 +23,7 @@ class FilmRead(FilmBase):
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
 
 
 class UserCreate(UserBase):
@@ -35,3 +35,8 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
