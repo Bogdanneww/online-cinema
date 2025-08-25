@@ -8,6 +8,9 @@ class FilmBase(BaseModel):
 class FilmCreate(FilmBase):
     pass
 
+class FilmUpdate(FilmBase):
+    pass
+
 class FilmRead(FilmBase):
     id: int
 
