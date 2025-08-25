@@ -6,6 +6,7 @@ from models import Base
 
 app = FastAPI()
 
+
 @app.on_event("startup")
 async def on_startup():
     async with engine.begin() as conn:

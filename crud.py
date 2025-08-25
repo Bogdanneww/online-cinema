@@ -3,6 +3,7 @@ from sqlalchemy import select
 from models import Film
 from schemas import FilmCreate, FilmUpdate
 
+
 async def create_film(db: AsyncSession, film: FilmCreate):
     new_film = Film(**film.model_dump())
     db.add(new_film)
@@ -10,15 +11,18 @@ async def create_film(db: AsyncSession, film: FilmCreate):
     await db.refresh(new_film)
     return new_film
 
+
 async def get_film(db: AsyncSession, film_id: int):
     result = await db.execute(select(Film).where(Film.id == film_id))
     film = result.scalar_one_or_none()
     return film
 
+
 async def get_films(db: AsyncSession):
     result = await db.execute(select(Film))
     films = result.scalars().all()
     return films
+
 
 async def update_film(db: AsyncSession, film_id: int, film: FilmUpdate):
     result = await db.execute(select(Film).where(Film.id == film_id))
@@ -32,6 +36,7 @@ async def update_film(db: AsyncSession, film_id: int, film: FilmUpdate):
     await db.commit()
     await db.refresh(db_film)
     return db_film
+
 
 async def delete_film(db: AsyncSession, film_id: int):
     result = await db.execute(select(Film).where(Film.id == film_id))
