@@ -1,13 +1,22 @@
+import os
+from dotenv import load_dotenv
+
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+load_dotenv()
 
-SECRET_KEY = "mysecretkey"
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in the environment variables.")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
