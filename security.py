@@ -44,3 +44,7 @@ def decode_token(token: str):
         return payload
     except JWTError:
         return None
+
+
+def create_activation_token(email: str):
+    return create_access_token({"sub": email, "type": "activation"})
