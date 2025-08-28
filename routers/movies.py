@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from routers.auth import require_admin
 from schemas import FilmCreate, FilmRead, FilmUpdate
 from database import get_db
 from crud import create_film, get_film, get_films, update_film, delete_film
+
 
 router = APIRouter()
 
@@ -36,7 +39,7 @@ async def edit_film(film_id: int, film: FilmUpdate, db: AsyncSession = Depends(g
 
 
 @router.delete("/movies/{film_id}", response_model=FilmRead)
-async def remove_film(film_id: int, db: AsyncSession = Depends(get_db)):
+async def remove_film(film_id: int, db: AsyncSession = Depends(get_db), current_user = Depends(require_admin)):
     deleted_film = await delete_film(db, film_id)
     if not deleted_film:
         raise HTTPException(status_code=404, detail="Film not found")

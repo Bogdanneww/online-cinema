@@ -1,10 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordBearer
 from schemas import UserCreate, UserRead, Token
 from crud import create_user, get_user_by_email
-from security import verify_password, create_access_token, decode_token, ACCESS_TOKEN_EXPIRE_MINUTES, hash_password
+from security import (
+    verify_password,
+    create_access_token,
+    decode_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    hash_password,
+)
 from database import get_db
 
 
@@ -46,3 +53,9 @@ async def get_current_user(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return UserRead.from_orm(db_user)
+
+
+async def require_admin(current_user: UserRead = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Access forbidden: admins only")
+    return current_user

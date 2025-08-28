@@ -22,7 +22,9 @@ def read_me(current_user: UserRead = Depends(get_current_user)):
 
 
 @router.post("/reset_password")
-async def reset_password(email: str, new_password: str, db: AsyncSession = Depends(get_db)):
+async def reset_password(
+    email: str, new_password: str, db: AsyncSession = Depends(get_db)
+):
     db_user = await get_user_by_email(db, email)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
