@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordBearer
-from schemas import UserCreate, UserRead, Token
-from crud import create_user, get_user_by_email
 
-from mail_service.email_service import send_activation_email
+from models import User
+from schemas import UserCreate, UserRead, Token
+from crud import create_user, get_user_by_email, save_reset_token, get_user_by_reset_token
+
+from mail_service.email_service import send_activation_email, send_password_reset_email
 from security import create_activation_token
 from security import (
     verify_password,
@@ -16,6 +18,8 @@ from security import (
     hash_password,
 )
 from database import get_db
+
+import secrets
 
 
 router = APIRouter()
@@ -88,3 +92,30 @@ async def activate_account(token: str, db: AsyncSession = Depends(get_db)):
     db_user.is_active = True
     await db.commit()
     return {"detail": "Account activated successfully"}
+
+
+@router.post("/forgot_password")
+async def forgot_password(email: str, db: AsyncSession = Depends(get_db)):
+    user = await get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    token = secrets.token_urlsafe(32)
+    await save_reset_token(db, user.id, token)
+    send_password_reset_email(email, token)
+    return {"detail": "Password reset email sent"}
+
+
+@router.post("/reset_password")
+async def reset_password(token: str, new_password: str, db: AsyncSession = Depends(get_db)):
+    user_id = await get_user_by_reset_token(db, token)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.hashed_password = hash_password(new_password)
+    await db.commit()
+    return {"detail": "Password updated successfully"}
