@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from models import Film, User
+from models import Film, User, PasswordResetToken
 from schemas import FilmCreate, FilmUpdate, UserCreate
 from security import hash_password
+from datetime import datetime, timedelta
 
 
 async def create_film(db: AsyncSession, film: FilmCreate):
@@ -61,3 +62,23 @@ async def create_user(db: AsyncSession, user: UserCreate):
 async def get_user_by_email(db: AsyncSession, email: str):
     result = await db.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
+
+
+async def save_reset_token(db: AsyncSession, user_id: int, token: str):
+    reset_token = PasswordResetToken(user_id=user_id, token=token)
+    db.add(reset_token)
+    await db.commit()
+    await db.refresh(reset_token)
+    return reset_token
+
+
+async def get_user_by_reset_token(db: AsyncSession, token: str):
+    expiry_time = datetime.utcnow() - timedelta(hours=24)
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == token,
+            PasswordResetToken.created_at >= expiry_time
+        )
+    )
+    token_obj = result.scalar_one_or_none()
+    return token_obj.user_id if token_obj else None

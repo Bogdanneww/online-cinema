@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base
+from datetime import datetime
 
 
 Base = declarative_base()
@@ -22,3 +23,12 @@ class Film(Base):
     title = Column(String, index=True, nullable=False)
     genre = Column(String, index=True, nullable=False)
     price = Column(Float, nullable=False)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_resets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token = Column(String, unique=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
