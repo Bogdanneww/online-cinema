@@ -32,3 +32,10 @@ def send_activation_email(user_email: str, token: str):
     subject = "Activate your account"
     body = f"Hello!\nClick this link to activate your account:\n{link}"
     send_email(user_email, subject, body)
+
+
+def send_password_reset_email(user_email: str, token: str):
+    reset_link = f"http://localhost:8000/reset_password?token={token}"
+    subject = "Reset your password"
+    body = f"Click the link to reset your password:\n{reset_link}\n\nThis link will expire in 24 hours."
+    send_email(user_email, subject, body)
