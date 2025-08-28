@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from routers.auth import require_admin
 from schemas import FilmCreate, FilmRead, FilmUpdate
 from database import get_db
 from crud import create_film, get_film, get_films, update_film, delete_film
+from models import User
 
 
 router = APIRouter()
@@ -44,3 +46,14 @@ async def remove_film(film_id: int, db: AsyncSession = Depends(get_db), current_
     if not deleted_film:
         raise HTTPException(status_code=404, detail="Film not found")
     return deleted_film
+
+
+@router.post("/users/{user_id}/make_admin")
+async def make_admin(user_id: int, db: AsyncSession = Depends(get_db), current_user = Depends(require_admin)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user_obj = result.scalar_one_or_none()
+    if not user_obj:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_obj.role = "admin"
+    await db.commit()
+    return {"detail": "User is now an admin"}
