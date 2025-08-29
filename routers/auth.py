@@ -1,8 +1,10 @@
 import secrets
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordBearer
 
@@ -16,13 +18,15 @@ from crud import (
 )
 
 from mail_service.email_service import send_activation_email, send_password_reset_email
-from security import create_activation_token
 from security import (
     verify_password,
     create_access_token,
+    create_activation_token,
     decode_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     hash_password,
+    get_current_user,
+    require_admin
 )
 from database import get_db
 
@@ -60,27 +64,6 @@ async def login(email: str, password: str, db: AsyncSession = Depends(get_db)):
         data={"sub": db_user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-async def get_current_user(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
-) -> UserRead:
-    payload = decode_token(token)
-    if payload is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    email = payload.get("sub")
-    if email is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    db_user = await get_user_by_email(db, email)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return UserRead.from_orm(db_user)
-
-
-async def require_admin(current_user: UserRead = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Access forbidden: admins only")
-    return current_user
 
 
 @router.get("/activate")
