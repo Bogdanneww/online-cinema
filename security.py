@@ -59,8 +59,7 @@ def create_activation_token(email: str):
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ) -> UserRead:
     payload = decode_token(token)
     if payload is None or payload.get("type") != "access":

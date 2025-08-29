@@ -26,7 +26,6 @@ from security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     hash_password,
     get_current_user,
-    require_admin
 )
 from database import get_db
 
@@ -115,3 +114,27 @@ async def reset_password(
 async def upload_file(file: UploadFile = File(...)):
     contents = await file.read()
     return {"filename": file.filename, "size": len(contents)}
+
+
+@router.post("/users/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File is not an image")
+
+    filename = f"user_{current_user.id}.jpg"
+    file_path = os.path.join("static", "avatars", filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    contents = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    user = db.query(User).filter(User.id == current_user.id).first()
+    user.avatar_url = f"/static/avatars/{filename}"
+    db.commit()
+
+    return {"detail": "Avatar uploaded successfully", "avatar_url": user.avatar_url}
