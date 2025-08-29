@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+import secrets
+
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import timedelta
@@ -6,7 +8,12 @@ from fastapi.security import OAuth2PasswordBearer
 
 from models import User
 from schemas import UserCreate, UserRead, Token
-from crud import create_user, get_user_by_email, save_reset_token, get_user_by_reset_token
+from crud import (
+    create_user,
+    get_user_by_email,
+    save_reset_token,
+    get_user_by_reset_token,
+)
 
 from mail_service.email_service import send_activation_email, send_password_reset_email
 from security import create_activation_token
@@ -18,8 +25,6 @@ from security import (
     hash_password,
 )
 from database import get_db
-
-import secrets
 
 
 router = APIRouter()
@@ -106,7 +111,9 @@ async def forgot_password(email: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/reset_password")
-async def reset_password(token: str, new_password: str, db: AsyncSession = Depends(get_db)):
+async def reset_password(
+    token: str, new_password: str, db: AsyncSession = Depends(get_db)
+):
     user_id = await get_user_by_reset_token(db, token)
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
@@ -119,3 +126,9 @@ async def reset_password(token: str, new_password: str, db: AsyncSession = Depen
     user.hashed_password = hash_password(new_password)
     await db.commit()
     return {"detail": "Password updated successfully"}
+
+
+@router.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    return {"filename": file.filename, "size": len(contents)}

@@ -77,7 +77,7 @@ async def get_user_by_reset_token(db: AsyncSession, token: str):
     result = await db.execute(
         select(PasswordResetToken).where(
             PasswordResetToken.token == token,
-            PasswordResetToken.created_at >= expiry_time
+            PasswordResetToken.created_at >= expiry_time,
         )
     )
     token_obj = result.scalar_one_or_none()
