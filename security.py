@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from crud import get_user_by_email
 from schemas import UserRead
+from utils import hash_password, verify_password
 
 
 load_dotenv()
@@ -25,14 +26,6 @@ if not SECRET_KEY:
     raise ValueError("SECRET_KEY is not set in the environment variables.")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):

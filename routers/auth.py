@@ -1,10 +1,10 @@
 import secrets
 import os
+import boto3
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from datetime import timedelta
 from fastapi.security import OAuth2PasswordBearer
 
@@ -33,6 +33,15 @@ from database import get_db
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION"),
+)
+
+BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
 
 
 @router.post("/register", response_model=UserRead)
@@ -119,22 +128,41 @@ async def upload_file(file: UploadFile = File(...)):
 @router.post("/users/me/avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: UserRead = Depends(get_current_user),
 ):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File is not an image")
 
     filename = f"user_{current_user.id}.jpg"
-    file_path = os.path.join("static", "avatars", filename)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
     contents = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(contents)
 
-    user = db.query(User).filter(User.id == current_user.id).first()
-    user.avatar_url = f"/static/avatars/{filename}"
-    db.commit()
+    s3.put_object(
+        Bucket=BUCKET_NAME, Key=filename, Body=contents, ContentType=file.content_type
+    )
 
-    return {"detail": "Avatar uploaded successfully", "avatar_url": user.avatar_url}
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one_or_none()
+    if user:
+        user.avatar_url = filename
+        await db.commit()
+
+    return {"detail": "Avatar uploaded successfully", "avatar_url": filename}
+
+
+@router.get("/users/me/avatar")
+async def get_my_avatar_url(
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one_or_none()
+    if not user or not user.avatar_url:
+        raise HTTPException(status_code=404, detail="Avatar not set")
+
+    presigned_url = s3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": BUCKET_NAME, "Key": user.avatar_url},
+        ExpiresIn=3600,
+    )
+    return {"avatar_url": presigned_url}

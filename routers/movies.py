@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from routers.auth import require_admin
+from security import require_admin
 from schemas import FilmCreate, FilmRead, FilmUpdate
 from database import get_db
 from crud import create_film, get_film, get_films, update_film, delete_film

@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models import Film, User, PasswordResetToken
 from schemas import FilmCreate, FilmUpdate, UserCreate
-from security import hash_password
+from utils import hash_password
 from datetime import datetime, timedelta
 
 
