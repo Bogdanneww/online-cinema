@@ -23,6 +23,9 @@ BASE_URL = "http://test"
 
 @pytest.fixture(scope="session")
 def event_loop():
+    """
+    Create and return a new event loop for the test session.
+    """
     loop = asyncio.new_event_loop()
     yield loop
     loop.close()
@@ -30,6 +33,9 @@ def event_loop():
 
 @pytest.fixture
 async def async_session() -> AsyncSession:
+    """
+    Set up an in-memory async database session with overridden FastAPI dependency.
+    """
     engine = create_async_engine(
         TEST_DATABASE_URL,
         connect_args={"check_same_thread": False},
@@ -57,6 +63,9 @@ async def async_session() -> AsyncSession:
 
 @pytest.mark.anyio
 async def test_activate_account_success(async_session: AsyncSession):
+    """
+    Test successful account activation using a valid token.
+    """
     email = f"user_{uuid.uuid4().hex[:6]}@example.com"
     password = "12345"
     user_data = UserCreate(email=email, password=password, role="user")
@@ -73,6 +82,9 @@ async def test_activate_account_success(async_session: AsyncSession):
 
 @pytest.mark.anyio
 async def test_forgot_password_user_not_found(async_session: AsyncSession):
+    """
+    Test forgot password flow for a non-existing user.
+    """
     async with AsyncClient(transport=transport, base_url=BASE_URL) as client:
         response = await client.post(
             "/forgot_password", params={"email": "unknown@example.com"}
@@ -84,6 +96,9 @@ async def test_forgot_password_user_not_found(async_session: AsyncSession):
 
 @pytest.mark.anyio
 async def test_reset_password_invalid_token(async_session: AsyncSession):
+    """
+    Test password reset using an invalid token.
+    """
     async with AsyncClient(transport=transport, base_url=BASE_URL) as client:
         response = await client.post(
             "/reset_password",
@@ -95,6 +110,9 @@ async def test_reset_password_invalid_token(async_session: AsyncSession):
 
 @pytest.mark.anyio
 async def test_upload_file_success(async_session: AsyncSession):
+    """
+    Test successful file upload.
+    """
     async with AsyncClient(transport=transport, base_url=BASE_URL) as client:
         files = {"file": ("test.txt", b"Hello, world!", "text/plain")}
         response = await client.post("/upload", files=files)

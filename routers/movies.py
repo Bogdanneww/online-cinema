@@ -14,18 +14,27 @@ router = APIRouter()
 
 @router.post("/movies/", response_model=FilmRead)
 async def add_film(film: FilmCreate, db: AsyncSession = Depends(get_db)):
+    """
+    Create a new film entry.
+    """
     new_film = await create_film(db, film)
     return new_film
 
 
 @router.get("/movies/", response_model=list[FilmRead])
 async def list_films(db: AsyncSession = Depends(get_db)):
+    """
+    Get a list of all films.
+    """
     films = await get_films(db)
     return films
 
 
 @router.get("/movies/{film_id}", response_model=FilmRead)
 async def read_film(film_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Get details of a film by its ID.
+    """
     film = await get_film(db, film_id)
     if not film:
         raise HTTPException(status_code=404, detail="Film not found")
@@ -34,6 +43,9 @@ async def read_film(film_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.put("/movies/{film_id}", response_model=FilmRead)
 async def edit_film(film_id: int, film: FilmUpdate, db: AsyncSession = Depends(get_db)):
+    """
+    Update a film's details by ID.
+    """
     updated_film = await update_film(db, film_id, film)
     if not updated_film:
         raise HTTPException(status_code=404, detail="Film not found")
@@ -46,6 +58,9 @@ async def remove_film(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_admin),
 ):
+    """
+    Delete a film (admin only).
+    """
     deleted_film = await delete_film(db, film_id)
     if not deleted_film:
         raise HTTPException(status_code=404, detail="Film not found")
@@ -58,6 +73,9 @@ async def make_admin(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_admin),
 ):
+    """
+    Promote a user to admin role (admin only).
+    """
     result = await db.execute(select(User).where(User.id == user_id))
     user_obj = result.scalar_one_or_none()
     if not user_obj:

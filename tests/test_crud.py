@@ -33,6 +33,11 @@ Base = declarative_base()
 
 
 class Film(Base):
+    """
+    SQLAlchemy model for the 'films' table.
+    Attributes: id, title, genre, price.
+    """
+
     __tablename__ = "films"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
@@ -41,6 +46,11 @@ class Film(Base):
 
 
 class User(Base):
+    """
+    SQLAlchemy model for the 'users' table.
+    Attributes: id, email, hashed_password, role, is_active.
+    """
+
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
@@ -50,6 +60,11 @@ class User(Base):
 
 
 class PasswordResetToken(Base):
+    """
+    SQLAlchemy model for the 'password_resets' table.
+    Stores password reset tokens with timestamps.
+    """
+
     __tablename__ = "password_resets"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
@@ -58,29 +73,52 @@ class PasswordResetToken(Base):
 
 
 class FilmCreate(BaseModel):
+    """
+    Pydantic schema for creating a Film.
+    Fields: title, genre, price.
+    """
+
     title: str
     genre: str
     price: float
 
 
 class FilmUpdate(BaseModel):
+    """
+    Pydantic schema for updating a Film.
+    Fields: title, genre, price.
+    """
+
     title: str
     genre: str
     price: float
 
 
 class UserCreate(BaseModel):
+    """
+    Pydantic schema for creating a User.
+    Fields: email, password, role.
+    """
+
     email: str
     password: str
     role: str
 
 
 def hash_password(password: str) -> str:
+    """
+    Dummy hash function for password.
+    Replace with real hashing in production.
+    """
     return "hashed_" + password
 
 
 @pytest_asyncio.fixture(scope="function")
 async def async_session():
+    """
+    Creates a new in-memory SQLite async session for each test.
+    Sets up and tears down database tables around tests.
+    """
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:", echo=False, future=True
     )
@@ -98,6 +136,9 @@ async def async_session():
 
 @pytest.mark.asyncio
 async def test_create_and_get_film(async_session: AsyncSession):
+    """
+    Test creating a film and retrieving it by ID.
+    """
     film_data = FilmCreate(title="Test Film", genre="Action", price=9.99)
     new_film = await create_film(async_session, film_data)
     assert new_film.id is not None
@@ -109,6 +150,9 @@ async def test_create_and_get_film(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_get_films(async_session: AsyncSession):
+    """
+    Test retrieving a list of films after creating multiple entries.
+    """
     film_data1 = FilmCreate(title="Film1", genre="Genre1", price=1.0)
     film_data2 = FilmCreate(title="Film2", genre="Genre2", price=2.0)
     await create_film(async_session, film_data1)
@@ -121,6 +165,9 @@ async def test_get_films(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_update_film(async_session: AsyncSession):
+    """
+    Test updating film details and verifying changes.
+    """
     film_data = FilmCreate(title="Old Title", genre="Drama", price=5.00)
     film = await create_film(async_session, film_data)
 
@@ -134,6 +181,9 @@ async def test_update_film(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_delete_film(async_session: AsyncSession):
+    """
+    Test deleting a film and confirming it no longer exists.
+    """
     film_data = FilmCreate(title="To Delete", genre="Horror", price=4.00)
     film = await create_film(async_session, film_data)
 
@@ -146,6 +196,10 @@ async def test_delete_film(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_create_and_get_user(async_session: AsyncSession):
+    """
+    Test user creation and retrieval by email.
+    Also checks password hashing correctness using bcrypt.
+    """
     user_data = UserCreate(email="test@example.com", password="12345", role="user")
     user = await create_user(async_session, user_data)
 
@@ -156,6 +210,9 @@ async def test_create_and_get_user(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_save_and_get_reset_token(async_session: AsyncSession):
+    """
+    Test saving a password reset token and retrieving the associated user ID.
+    """
     user_data = UserCreate(email="reset@example.com", password="resetpass", role="user")
     user = await create_user(async_session, user_data)
 
@@ -168,6 +225,9 @@ async def test_save_and_get_reset_token(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_expired_reset_token(async_session: AsyncSession):
+    """
+    Test that an expired password reset token is not accepted.
+    """
     user_data = UserCreate(email="expired@example.com", password="expired", role="user")
     user = await create_user(async_session, user_data)
 
