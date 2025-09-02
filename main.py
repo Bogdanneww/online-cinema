@@ -5,10 +5,15 @@ from models import Base
 
 
 app = FastAPI()
-
+"""
+FastAPI application instance.
+"""
 
 @app.on_event("startup")
 async def on_startup():
+    """
+    Create all database tables on application startup.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
