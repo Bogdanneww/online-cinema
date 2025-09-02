@@ -19,6 +19,7 @@ class User(Base):
         role (str): User role (default 'user').
         is_active (bool): Indicates if user is active.
     """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -37,6 +38,7 @@ class Film(Base):
         genre (str): Genre of the film.
         price (float): Price of the film.
     """
+
     __tablename__ = "films"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -54,6 +56,7 @@ class PasswordResetToken(Base):
         token (str): Unique token string.
         created_at (datetime): Token creation timestamp.
     """
+
     __tablename__ = "password_resets"
 
     id = Column(Integer, primary_key=True, index=True)

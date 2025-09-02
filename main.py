@@ -9,6 +9,7 @@ app = FastAPI()
 FastAPI application instance.
 """
 
+
 @app.on_event("startup")
 async def on_startup():
     """

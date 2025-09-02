@@ -8,16 +8,14 @@ engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True, future=True)
 Async SQLAlchemy engine instance connected to the SQLite database at './online_cinema.db'.
 """
 SessionLocal = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    future=True
+    engine, class_=AsyncSession, expire_on_commit=False, future=True
 )
 """
 Async sessionmaker factory that generates AsyncSession instances
 for interacting with the database.
 expire_on_commit=False prevents automatic expiration of objects after commit.
 """
+
 
 async def get_db():
     """
