@@ -1,14 +1,7 @@
+import smtplib
+
 from email.mime.text import MIMEText
-import os, smtplib
-from dotenv import load_dotenv
-
-load_dotenv()
-
-EMAIL_HOST = os.getenv("EMAIL_HOST")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "noreply@yourapp.com")
+from settings import settings
 
 
 def send_email(to_email: str, subject: str, body: str):
@@ -20,13 +13,13 @@ def send_email(to_email: str, subject: str, body: str):
     """
     msg = MIMEText(body)
     msg["Subject"] = subject
-    msg["From"] = EMAIL_FROM
+    msg["From"] = settings.EMAIL_FROM
     msg["To"] = to_email
 
     try:
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
             server.starttls()
-            server.login(EMAIL_USER, EMAIL_PASS)
+            server.login(settings.EMAIL_USER, settings.EMAIL_PASS)
             server.send_message(msg)
         print("Email sent")
     except Exception as e:
