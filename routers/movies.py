@@ -71,7 +71,6 @@ async def remove_film(
 async def make_admin(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_admin),
 ):
     """
     Promote a user to admin role (admin only).
