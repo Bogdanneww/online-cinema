@@ -11,13 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from crud import get_user_by_email
 from schemas import UserRead
+from settings import settings
 
 
 load_dotenv()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

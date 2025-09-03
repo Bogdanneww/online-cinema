@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from settings import settings
 
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./online_cinema.db"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True, future=True)
 """
