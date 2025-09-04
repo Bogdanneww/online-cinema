@@ -17,31 +17,34 @@
 - SQLAlchemy (async)
 - SQLite (in-memory for tests)
 - Alembic (database migrations)
+- Poetry (dependency management)
 - Pytest + pytest-asyncio (testing)
+- Black, Mypy (formatting and static analysis)
 
 ## Installation
 
 1. Clone the repository:
 
    ```bash
-   git clone <your-repo-url>
+   git clone <https://github.com/Bogdanneww/online-cinema.git>
    cd online-cinema
 
-2. Create and activate a virtual environment:
+2. Install Poetry (if not installed):
 
    ```bash
-   python -m venv .venv
-   # Linux/macOS
-   source .venv/bin/activate
-   # Windows
-   .venv\Scripts\activate
+   curl -sSL https://install.python-poetry.org | python -
 
-3. Install dependencies:
+3. Install dependencies and create virtual environment:
 
    ```bash
-   pip install -r requirements.txt
+   poetry install
 
-4. Run database migrations:
+4. Activate the virtual environment:
+
+   ```bash
+   poetry shell
+   
+5. Run database migrations:
 
    ```bash
    alembic upgrade head
@@ -49,7 +52,7 @@
 ## Running the Server
 
    ```bash
-   uvicorn main:app --reload
+   poetry run uvicorn main:app --reload
 
-After starting, the server will be available at:
-http://127.0.0.1:8000
+   After starting, the server will be available at:
+   http://127.0.0.1:8000
