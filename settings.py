@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     EMAIL_FROM: EmailStr = "noreply@yourapp.com"
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./online_cinema.db"
+    SYNC_DATABASE_URL: str = "sqlite:///./online_cinema.db"
 
     class Config:
         """
